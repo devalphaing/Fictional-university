@@ -1,28 +1,6 @@
 <?php get_header() ?>
 
 <?php
-// Get the current page ID
-$current_page_id = get_the_ID();
-
-// Get child pages of the current page
-$child_pages = get_pages(
-    array(
-        'child_of' => $current_page_id,
-    )
-);
-
-// Loop through child pages
-// foreach ($child_pages as $child_page) {
-//     $child_page_id = $child_page->ID;
-//     $child_page_title = $child_page->post_title;
-
-//     // Output or use the child page ID and title as needed
-//     echo "Child Page ID: $child_page_id, Title: $child_page_title<br>";
-// }
-
-?>
-
-<?php
 while (have_posts()) {
     the_post(); ?>
 
@@ -40,7 +18,9 @@ while (have_posts()) {
     </div>
 
     <div class="container container--narrow page-section">
-        <?php if (wp_get_post_parent_id(get_the_ID())) {
+        <?php
+        $theParent = wp_get_post_parent_id(get_the_ID());
+        if ($theParent) {
             $parent_title = get_the_title($post->post_parent);
             ?>
             <div class="metabox metabox--position-up metabox--with-home-link">
@@ -55,42 +35,46 @@ while (have_posts()) {
             </div>
         <?php } ?>
 
+        <?php
+            $childArray = get_pages(array(
+                'child_of' => get_the_ID()
+            ));
 
-
-        <!-- page_links div just below is my personal login which I found on google. -->
+            if($theParent or $childArray) { 
+        ?>
         <div class="page-links">
-            <h2 class="page-links__title"><a href="#">
-                    <?php the_title() ?>
+            <h2 class="page-links__title"><a href="<?php echo get_permalink($theParent) ?>">
+                    <?php echo get_the_title($theParent) ?>
                 </a></h2>
             <ul class="min-list">
-
                 <?php
-                foreach ($child_pages as $child_page) {
-                    $child_page_id = $child_page->ID;
-                    $child_page_title = $child_page->post_title;
 
-                    // Output or use the child page ID and title as needed
-                    // echo "Child Page ID: $child_page_id, Title: $child_page_title<br>";                
-                    ?>
-                    <li><a href="<?php echo get_permalink($child_page_id); ?>">
-                            <?php echo $child_page_title; ?>
-                        </a></li>
-                    <?php
+                if ($theParent) {
+                    $findChildrenOf = $theParent;
+                } else {
+                    $findChildrenOf = get_the_ID();
                 }
-                ?>
-                <!-- <li class="current_page_item"><a href="#">Our History</a></li>
-                <li><a href="#">Our Goals</a></li> -->
 
+                wp_list_pages(
+                    array(
+                        'title_li' => NULL,
+                        'child_of' => $findChildrenOf,
+                        'sort_cloumn' => 'menu_order'
+                    )
+                );
+
+                ?>
             </ul>
         </div>
+        <?php } ?>
+
 
 
         <div class="generic-content">
             <?php echo the_content(); ?>
         </div>
+
     </div>
-
-
 
     <?php
 }
