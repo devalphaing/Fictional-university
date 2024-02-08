@@ -1,25 +1,19 @@
 <?php get_header(); ?>
 
-<?php the_post(); 
+<?php the_post(); ?>
 
-pageBanner();
-
-?>
+<?php pageBanner(); ?>
 
 <div class="container container--narrow page-section">
-
-    <div class="metabox metabox--position-up metabox--with-home-link">
-        <p>
-            <a class="metabox__blog-home-link" href="<?php echo site_url('events'); ?>"><i class="fa fa-home"
-                    aria-hidden="true"></i> Events home
-            </a> <span class="metabox__main">
-                <?php the_title(); ?>
-            </span>
-        </p>
-    </div>
-
     <div class="generic-content">
-        <?php the_content(); ?>
+        <div class="row group">
+            <div class="one-third">
+                <?php the_post_thumbnail('professorPotrait'); ?>
+            </div>
+            <div class="two-third">
+                <?php the_content(); ?>
+            </div>
+        </div>
     </div>
 
     <?php
@@ -29,7 +23,7 @@ pageBanner();
 
         echo '<hr class="section-break">';
 
-        echo '<h2 class="headline headline--medium">Related Program(s)</h2>';
+        echo '<h2 class="headline headline--medium">Subject(s) Taught</h2>';
 
         echo '<ul class="link-list min-list">';
 
