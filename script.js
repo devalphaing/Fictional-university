@@ -1,6 +1,7 @@
 document.addEventListener("DOMContentLoaded", function () {
-
-  document.body.insertAdjacentHTML('beforeend', `
+  document.body.insertAdjacentHTML(
+    "beforeend",
+    `
     <div class="search-overlay">
     <div class="search-overlay__top">
       <div class="container">
@@ -14,7 +15,8 @@ document.addEventListener("DOMContentLoaded", function () {
       <div id="search-overlay__results"></div>
     </div>
   </div>
-`)
+`
+  );
 
   let isOverlayOpen = false;
   let isSpinnerRunning = false;
@@ -44,7 +46,7 @@ document.addEventListener("DOMContentLoaded", function () {
       isOverlayOpen = true;
       setTimeout(() => {
         inputRef.focus();
-      }, 301)
+      }, 301);
     });
   });
 
@@ -53,7 +55,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Remove the search-overlay--active class to close the overlay
     searchOverlay.classList.remove("search-overlay--active");
     document.body.classList.remove("body-no-scroll");
-    inputRef.value = '';
+    inputRef.value = "";
     isOverlayOpen = false;
   });
 
@@ -63,14 +65,14 @@ document.addEventListener("DOMContentLoaded", function () {
       document.body.classList.add("body-no-scroll");
       setTimeout(() => {
         inputRef.focus();
-      }, 301)
+      }, 301);
       isOverlayOpen = true;
     }
     // Check if the Esc key is pressed
     if (event.keyCode === 27 && isOverlayOpen) {
       searchOverlay.classList.remove("search-overlay--active");
       document.body.classList.remove("body-no-scroll");
-      inputRef.value = '';
+      inputRef.value = "";
       isOverlayOpen = false;
     }
   });
@@ -92,40 +94,117 @@ document.addEventListener("DOMContentLoaded", function () {
       }
       timeTyper = setTimeout(async () => {
         try {
+          let resData = await axios.get(
+            `${universityData.root_url}/wp-json/university/v1/search?term=${inputValue}`
+          );
 
-          //delete below code later on
-          const promises = [
-            axios.get(`${universityData.root_url}/wp-json/wp/v2/posts?search=${inputValue}`),
-            axios.get(`${universityData.root_url}/wp-json/wp/v2/pages?search=${inputValue}`)
-          ];
-      
-          // Execute all promises concurrently
-          const [resDataPosts, resDataPages] = await Promise.all(promises);
+          resData = resData?.data;
 
-          const resData = resDataPosts.data.concat(resDataPages.data);
-          console.log(resData, ' data ----');
+          // const resData = resDataPosts.data.concat(resDataPages.data);
+          console.log(resData, " data ----");
 
           let html = `
-            <h2 class="search-overlay__section-title">Search Results:</h2>
-          `;
+            <div class="row">
+              <div class="one-third">
+                <h2 class="search-overlay__section-title">General Information</h2>`;
 
-          html += resData.length ? `<ul class="link-list min-list">` : '<p>No Information Found!</p>';
+          html += resData.generalInfo.length
+            ? `<ul class="link-list min-list">`
+            : "<p>No Information Found!</p>";
 
-          resData.forEach((data) => {
+          resData.generalInfo.forEach((data) => {
             html += `
               <li>
-                <a href="${data?.link}">
-                  ${data?.title?.rendered}
+                <a href="${data?.permalink}">
+                  ${data?.title}
                 </a>
-                ${data?.type === 'post' ? 'by ' + data?.authorName : ''}
+                ${data?.postType === "post" ? "by " + data?.author : ""}
               </li>
             `;
           });
-          html += resData.length ? `</ul>`: '';
+
+          html += resData.generalInfo.length ? `</ul>` : "";
+
+          html += `</div>
+              <div class="one-third">
+                <h2 class="search-overlay__section-title">Programs</h2>`;
+
+          html += resData.programs.length
+            ? `<ul class="link-list min-list">`
+            : "<p>No Information Found!</p>";
+
+          resData.programs.forEach((data) => {
+            html += `
+                  <li>
+                    <a href="${data?.permalink}">
+                      ${data?.title}
+                    </a>
+                  </li>
+                `;
+          });
+
+          html += resData.programs.length ? `</ul>` : "";
+
+          html += `<h2 class="search-overlay__section-title">Professors</h2>`;
+
+          //
+          html += resData.professors.length
+            ? `<ul class="professor-cards">`
+            : "<p>No Information Found!</p>";
+
+          resData.professors.forEach((data) => {
+            html += `
+            <li class="professor-card__list-item">
+              <a class="professor-card" href="${data?.permalink}">
+                  <img class="professor-card__image" src="${data?.thumbnail}">
+                  <span class="professor-card__name">${data?.title}</span>
+              </a>
+            </li>
+              `;
+          });
+
+          html += resData.professors.length ? `</ul>` : "";
+
+          html += `</div>
+              <div class="one-third">
+                <h2 class="search-overlay__section-title">Events</h2>`;
+
+          //
+          html += resData.events.length
+            ? ``
+            : "<p>No Information Found!</p>";
+
+          resData.events.forEach((data) => {
+            html += `
+            <div class="event-summary">
+              <a class="event-summary__date t-center" href="${data?.permalink}">
+                  <span class="event-summary__month">
+                      ${data?.month}
+                  </span>
+                  <span class="event-summary__day">
+                      ${data?.day}
+                  </span>
+              </a>
+              <div class="event-summary__content">
+                  <h5 class="event-summary__title headline headline--tiny"><a href="${data?.permalink}">
+                          ${data?.title}
+                      </a></h5>
+                  <p>
+                      ${data?.excerpt} <a href="${data?.permalink}" class="nu gray">Read more</a>
+                  </p>
+              </div>
+            </div>
+            `;
+          });
+
+          html += `</div>
+            </div>
+          `;
           resultsDiv.innerHTML = html;
         } catch (err) {
           console.error(err);
-          resultsDiv.innerHTML = '<h2 class="search-overlay__section-title">Error</h2>';
+          resultsDiv.innerHTML =
+            '<h2 class="search-overlay__section-title">Error</h2>';
         }
         isSpinnerRunning = false;
       }, 750);
